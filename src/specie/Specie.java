@@ -1,10 +1,18 @@
+package specie;
+
+import main.MemoryUtils;
+
+import java.util.concurrent.Callable;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-public class Specie {
-    private final BlockEntry[][] layer1 = new BlockEntry[16][14];
+public class Specie implements Comparable<Specie> {
+    private final BlockEntry[][] layer1;
+    private int fitness = 0;
 
     public Specie() {
+        layer1 = new BlockEntry[16][14];
+
         for (int i = 0; i < layer1.length; i++) {
             for (int j = 0; j < layer1[0].length; j++) {
                 layer1[i][j] = new BlockEntry();
@@ -12,11 +20,16 @@ public class Specie {
         }
     }
 
-    public Specie(Specie parent1, Specie parent2) {
-        // TODO
+    public Specie(Specie copyFrom) {
+        layer1 = copyFrom.layer1;
     }
 
-    public boolean[] get(double[][] blocks) {
+    public Specie(Specie parent1, Specie parent2) {
+        // TODO
+        layer1 = null;
+    }
+
+    private boolean[] run(double[][] blocks) {
         double[] layer2 = new double[6];
 
         for (int i = 0; i < layer1.length; i++) {
@@ -33,7 +46,42 @@ public class Specie {
         for (int i = 0; i < 6; i++) {
            result[i] = (boolean) out[i];
         }
+
+        fitness = MemoryUtils.getX();
+
         return result;
+    }
+
+    public Callable<Integer> getTester() {
+        return () -> {
+            this.fitness = 0;
+
+            int previousFitness = 0;
+            int stationaryFrames = 0;
+
+            while (!MemoryUtils.isDead()) {
+                MemoryUtils.setJoypad(run(MemoryUtils.getBlocks()));
+
+                if (fitness == previousFitness) {
+                    stationaryFrames++;
+                } else {
+                    stationaryFrames = 0;
+                }
+
+                if (stationaryFrames > 90) {
+                    MemoryUtils.setDead();
+                }
+
+                previousFitness = this.fitness;
+            }
+
+            return this.fitness;
+        };
+    }
+
+    @Override
+    public int compareTo(Specie other) {
+        return this.fitness - other.fitness;
     }
 
     public class BlockEntry {
