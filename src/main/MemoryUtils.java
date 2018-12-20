@@ -60,7 +60,7 @@ public class MemoryUtils {
             x = (x % 256) / 16;
             int y = (read(0x00CF + i) - 8) / 16;
 
-            blocks[x + 1][y - 1] = Block.ENEMY;
+            blocks[x][y] = Block.ENEMY;
         }
 
         return blocks;
