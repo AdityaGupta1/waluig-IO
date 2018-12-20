@@ -85,8 +85,6 @@ public class Specie implements Comparable<Specie> {
     private int stationaryFrames = 0;
 
     public boolean runFrame() {
-        this.fitness = 0;
-
         if (MemoryUtils.isDead()) {
             return false;
         }
