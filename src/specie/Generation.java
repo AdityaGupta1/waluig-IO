@@ -52,12 +52,18 @@ public class Generation {
     }
 
     public Specie nextSpecie() {
-        api.loadState("states/SMB.save");
+        return nextSpecie(true);
+    }
+
+    private Specie nextSpecie(boolean load) {
+        if (load) {
+            api.loadState("states/SMB.save");
+        }
         currentSpecie++;
 
         if (currentSpecie >= size) {
             advance();
-            return nextSpecie();
+            return nextSpecie(false);
         }
 
         return getCurrent();

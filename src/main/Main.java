@@ -10,14 +10,14 @@ public class Main {
     public static final API api = ApiSource.getAPI();
     private static final int speed = 400;
 
-    public static final int generationSize = 10;
+    public static final int generationSize = 50;
     public static final double percentToBreed = 0.2;
     public static final double baseMutationRate = 0.04;
 
     private static Generation generation = new Generation();
     private static Specie currentSpecie;
 
-    private static final long waitTime = 1000;
+    private static final long waitTime = 200;
     private static long resumeTime = 0;
 
     public static void main(String[] args) {
