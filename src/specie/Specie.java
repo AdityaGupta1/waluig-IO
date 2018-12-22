@@ -1,6 +1,8 @@
 package specie;
 
-import main.MemoryUtils;
+import main.Main;
+
+import static main.MemoryUtils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +35,11 @@ public class Specie implements Comparable<Specie> {
     }
 
     {
-        String id = "";
+        StringBuilder id = new StringBuilder();
         for (int i = 0; i < 5; i++) {
-            id += charset.get(random.nextInt(charset.size()));
+            id.append(charset.get(random.nextInt(charset.size())));
         }
-        this.id = id;
+        this.id = id.toString();
     }
 
     Specie() {
@@ -46,6 +48,16 @@ public class Specie implements Comparable<Specie> {
         for (int i = 0; i < layer1.length; i++) {
             for (int j = 0; j < layer1[0].length; j++) {
                 layer1[i][j] = new BlockEntry();
+            }
+        }
+    }
+
+    Specie(Specie parent) {
+        layer1 = new BlockEntry[16][14];
+
+        for (int i = 0; i < layer1.length; i++) {
+            for (int j = 0; j < layer1[0].length; j++) {
+                layer1[i][j] = new BlockEntry(parent.layer1[i][j]);
             }
         }
     }
@@ -60,7 +72,7 @@ public class Specie implements Comparable<Specie> {
         }
     }
 
-    private boolean[] calculate(MemoryUtils.Block[][] blocks) {
+    private boolean[] calculate(Block[][] blocks) {
         double[] layer2 = new double[6];
 
         for (int i = 0; i < layer1.length; i++) {
@@ -72,7 +84,7 @@ public class Specie implements Comparable<Specie> {
             }
         }
 
-        Object[] out = DoubleStream.of(layer2).mapToObj(x -> x / (layer1.length * layer1[0].length) > 0.5).toArray();
+        Object[] out = DoubleStream.of(layer2).mapToObj(x -> x / (layer1.length * layer1[0].length) > Main.pressThreshold).toArray();
         boolean[] result = new boolean[6];
         for (int i = 0; i < 6; i++) {
            result[i] = (boolean) out[i];
@@ -81,28 +93,29 @@ public class Specie implements Comparable<Specie> {
         return result;
     }
 
-    private int previousFitness = 0;
+    private int previousFitnessNoTime = 0;
     private int stationaryFrames = 0;
 
     public boolean runFrame() {
-        if (MemoryUtils.isDead()) {
+        if (isDead()) {
             return false;
         }
 
-        MemoryUtils.setJoypad(calculate(MemoryUtils.getBlocks()));
-        fitness = MemoryUtils.getX();
+        setJoypad(calculate(getBlocks()));
+        int fitnessNoTime = getX();
+        fitness = fitnessNoTime + 4 * getTime();
 
-        if (fitness == previousFitness) {
+        if (fitnessNoTime == previousFitnessNoTime) {
             stationaryFrames++;
         } else {
             stationaryFrames = 0;
         }
 
-        if (stationaryFrames > 90) {
-            MemoryUtils.setDead();
+        if (stationaryFrames > Main.framesBeforeReset) {
+            setDead();
         }
 
-        previousFitness = fitness;
+        previousFitnessNoTime = fitnessNoTime;
 
         return true;
     }
@@ -111,9 +124,17 @@ public class Specie implements Comparable<Specie> {
         return fitness;
     }
 
+    void resetFitness() {
+        fitness = 0;
+    }
+
     @Override
     public int compareTo(Specie other) {
-        return this.fitness - other.fitness;
+        if (this.fitness != other.fitness) {
+            return this.fitness - other.fitness;
+        }
+
+        return random.nextBoolean() ? 1 : -1;
     }
 
     @Override

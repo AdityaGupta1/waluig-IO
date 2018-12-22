@@ -6,6 +6,7 @@ import nintaco.api.API;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class Generation {
@@ -17,6 +18,7 @@ public class Generation {
     private int currentSpecie = -1;
     private final int numberToBreed = (int) (Main.percentToBreed * size);
 
+    private int staleGenerations = 0;
     static double mutationRate = Main.baseMutationRate;
 
     private static final Random random = new Random();
@@ -28,22 +30,35 @@ public class Generation {
         }
     }
 
+    private int lastMean = 0;
+
     private void advance() {
-        printStats();
+        int mean = printStats();
+
+        if (mean == lastMean) {
+            staleGenerations++;
+        } else {
+            staleGenerations = 0;
+        }
+
+        if (staleGenerations > Main.maxStaleGenerations) {
+            new Thread(() -> Main.main(null)).start(); // should reset
+            return;
+        }
+
+        mutationRate = Main.baseMutationRate + Main.mutationRatePerStaleGeneration * staleGenerations;
+        lastMean = mean;
 
         currentGeneration++;
         currentSpecie = -1;
 
         for (int i = numberToBreed; i < size; i++) {
-            int parent1;
-            int parent2;
-
-            do {
-                parent1 = random.nextInt(numberToBreed);
-                parent2 = random.nextInt(numberToBreed);
-            } while (parent1 == parent2);
-
-            generation[i] = new Specie(generation[parent1], generation[parent2]);
+            Supplier<Specie> randomSpecie = () -> generation[random.nextInt(numberToBreed)];
+            if (Main.singleParent) {
+                generation[i] = new Specie(randomSpecie.get());
+            } else {
+                generation[i] = new Specie(randomSpecie.get(), randomSpecie.get());
+            }
         }
     }
 
@@ -66,10 +81,11 @@ public class Generation {
             return nextSpecie(false);
         }
 
+        getCurrent().resetFitness();
         return getCurrent();
     }
 
-    private void printStats() {
+    private int printStats() {
         Arrays.sort(generation, Collections.reverseOrder());
         Specie[] top = Arrays.copyOfRange(generation, 0, numberToBreed);
         int mean = (int) Math.round(Stream.of(top).mapToInt(Specie::getFitness).average().getAsDouble());
@@ -81,12 +97,15 @@ public class Generation {
             System.out.println("" + (i + 1) + ") " + top[i]);
         }
         System.out.println();
+
+        return mean;
     }
 
     public String[] getDisplay() {
         return new String[]{
                 "generation " + currentGeneration + ", specie " + (currentSpecie + 1) + "/" + size,
-                getCurrent().toString()
+                getCurrent().toString(),
+                "stale: " + staleGenerations + ", mutation rate: " + mutationRate
         };
     }
 }

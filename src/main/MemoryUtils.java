@@ -15,7 +15,7 @@ public class MemoryUtils {
     }
 
     public enum Block {
-        BLOCK(2), ENEMY(-2), NONE(0);
+        BLOCK(10), ENEMY(-10), NONE(0);
 
         private int value;
 
@@ -76,6 +76,10 @@ public class MemoryUtils {
         for (int i = 0; i < 6; i++) {
             api.writeGamepad(0, buttons[i], buttonValues[i]);
         }
+    }
+
+    public static int getTime() {
+        return 100 * read(0x07F8) + 10 * read(0x07F9) + 1 * read(0x07FA);
     }
 
     private static int read(int address) {
