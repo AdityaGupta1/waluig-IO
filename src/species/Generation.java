@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -11,10 +12,10 @@ import static main.Constants.*;
 import static main.Main.api;
 
 public class Generation {
-    private int currentGeneration = 0;
+    private int currentGeneration = 1;
     private int currentNetwork = -1;
     private final Network[] generation = new Network[generationSize];
-    private final List<Species> species = new ArrayList<>();
+    private List<Species> species = new ArrayList<>();
 
     private static final Random random = new Random();
 
@@ -45,6 +46,7 @@ public class Generation {
     }
 
     private void advance() {
+        sortIntoSpecies();
         printStats();
 
         currentGeneration++;
@@ -52,7 +54,6 @@ public class Generation {
 
         crossOver();
         Arrays.stream(generation).forEach(Network::mutate);
-        sortIntoSpecies();
     }
 
     private void printStats() {
@@ -103,35 +104,29 @@ public class Generation {
     private int[] offspringPerSpecies() {
         ToDoubleFunction<Species> speciesAdjustedFitness = x -> ((double) x.getNetworks().stream().mapToInt(Network::getFitness).sum()) / x.getSize();
         double totalAdjustedFitness = this.species.stream().mapToDouble(speciesAdjustedFitness).sum();
+        return round(this.species.stream().mapToDouble(x -> generationSize * speciesAdjustedFitness.applyAsDouble(x) / totalAdjustedFitness).toArray());
+    }
 
-        double[] proportional = new double[this.species.size()];
-        int[] rounded = new int[this.species.size()]; // number of offspring for each species, rounded to ensure a total that matches the generation size
-        int unadjustedSum = 0;
-        for (int i = 0; i < this.species.size(); i++) {
-            Species species = this.species.get(i);
-            proportional[i] = speciesAdjustedFitness.applyAsDouble(species) / totalAdjustedFitness;
-            unadjustedSum += (rounded[i] = (int) Math.floor(proportional[i]));
+    private int[] round(double[] input) {
+        List<Integer> sortedIndices = IntStream.range(0, input.length).boxed()
+                .sorted(Comparator.comparingDouble(i -> input[i] - Math.floor(input[i]))).collect(Collectors.toList());
+        int[] output = new int[input.length];
+        int left = 100 - DoubleStream.of(input).mapToInt(x -> (int) Math.floor(x)).sum();
+        for (int i = 0; i < output.length; i++) {
+            output[i] = (int) Math.floor(input[i]);
+            if (sortedIndices.indexOf(i) < left) {
+                output[i]++;
+            }
         }
-
-        int left = 100 - unadjustedSum;
-        int[] sortedIndices = IntStream.range(0, proportional.length)
-                .boxed().sorted(Comparator.comparingDouble(i -> proportional[i]))
-                .mapToInt(x -> x).toArray();
-        int i = 0;
-        while (left > 0) {
-            rounded[sortedIndices[i++]]++;
-            left--;
-        }
-
-        return rounded;
+        return output;
     }
 
     private void sortIntoSpecies() {
-        species.forEach(Species::clear);
+        this.species.forEach(Species::clear);
 
         outer:
         for (Network network : generation) {
-            for (Species species : species) {
+            for (Species species : this.species) {
                 if (species.add(network)) {
                     continue outer;
                 }
@@ -140,6 +135,8 @@ public class Generation {
             Species species = new Species(network);
             this.species.add(species);
         }
+
+        this.species = this.species.stream().filter(x -> !x.isEmpty()).collect(Collectors.toList());
     }
 
     public String[] getDisplay() {

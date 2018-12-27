@@ -6,7 +6,7 @@ public class Constants {
     public static final int generationSize = 100;
     public static final int numberToDisplay = 10;
 
-    public static final double pressThreshold = 0.5;
+    public static final double pressThreshold = 0;
 
     public static final long waitTime = 200;
     public static final int framesBeforeReset = 60;

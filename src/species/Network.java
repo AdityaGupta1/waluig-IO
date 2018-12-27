@@ -296,11 +296,7 @@ public class Network implements Comparable<Network> {
 
     @Override
     public int compareTo(Network other) {
-        if (this.fitness != other.fitness) {
-            return this.fitness - other.fitness;
-        }
-
-        return random.nextBoolean() ? 1 : -1;
+        return this.fitness - other.fitness;
     }
 
     public String shortString() {

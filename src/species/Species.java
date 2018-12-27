@@ -36,6 +36,10 @@ public class Species {
         return networks.size();
     }
 
+    public boolean isEmpty() {
+        return networks.isEmpty();
+    }
+
     public void clear() {
         networks.clear();
     }
