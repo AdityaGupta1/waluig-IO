@@ -1,4 +1,4 @@
-package specie;
+package species;
 
 import main.MemoryUtils;
 

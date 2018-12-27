@@ -13,4 +13,4 @@ A Super Mario Bros genetic algorithm inspired by SethBling's MarI/O
 7. Select "Tools > Run Program..." and a window titled "Run Program" will pop up
 8. Click "Find JAR..." and select your downloaded `waluig-IO.jar` file from step 4
 9. Click "Load JAR", then click "Run"
-10. The program should start running and you should see some generation and specie info show in the game
+10. The program should start running and you should see some generation and species info show in the game

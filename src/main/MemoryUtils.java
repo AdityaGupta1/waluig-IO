@@ -1,6 +1,8 @@
 package main;
 
 import nintaco.api.API;
+import nintaco.api.GamepadButtons;
+
 import static nintaco.api.GamepadButtons.*;
 
 public class MemoryUtils {
@@ -23,7 +25,7 @@ public class MemoryUtils {
             this.value = value;
         }
 
-        public int getValue() {
+        public double getValue() {
             return value;
         }
     }
@@ -70,12 +72,16 @@ public class MemoryUtils {
         return read(0x071C) + 256 * read(0x071A);
     }
 
-    private static final int[] buttons = {A, B, Up, Down, Left, Right};
+    public static final int[] buttons = {A, B, Up, Down, Left, Right};
 
     public static void setJoypad(boolean[] buttonValues) {
         for (int i = 0; i < 6; i++) {
             api.writeGamepad(0, buttons[i], buttonValues[i]);
         }
+    }
+
+    public static void setButton(int button, boolean buttonValue) {
+        api.writeGamepad(0, button, buttonValue);
     }
 
     public static int getTime() {

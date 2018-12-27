@@ -3,23 +3,18 @@ package main;
 import nintaco.api.API;
 import nintaco.api.ApiSource;
 import nintaco.api.Colors;
-import specie.Generation;
-import specie.Specie;
+import species.Generation;
+import species.Network;
 
 public class Main {
     public static final API api = ApiSource.getAPI();
     private static final int speed = 800;
 
     public static final int generationSize = 100;
-    public static final double percentToBreed = 0.1;
-    public static final boolean singleParent = false;
     public static final double pressThreshold = 0.5;
-    public static final double baseMutationRate = 0.05;
-    public static final double mutationRatePerStaleGeneration = 0.02;
-    public static final int maxStaleGenerations = 10;
 
     private static Generation generation;
-    private static Specie currentSpecie;
+    private static Network currentNetwork;
 
     private static final long waitTime = 200;
     private static long resumeTime = 0;
@@ -27,7 +22,7 @@ public class Main {
 
     public static void main(String[] args) {
         generation = new Generation();
-        currentSpecie = generation.nextSpecie();
+        currentNetwork = generation.nextNetwork();
 
         api.addFrameListener(() -> {
             api.setColor(Colors.WHITE);
@@ -41,12 +36,12 @@ public class Main {
                 return;
             }
 
-            if (currentSpecie == null) {
+            if (currentNetwork == null) {
                 return;
             }
 
-            if (!currentSpecie.runFrame()) {
-                currentSpecie = generation.nextSpecie();
+            if (!currentNetwork.runFrame()) {
+                currentNetwork = generation.nextNetwork();
                 resumeTime = System.currentTimeMillis() + waitTime;
             }
         });

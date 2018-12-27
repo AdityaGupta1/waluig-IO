@@ -1,17 +1,19 @@
-package specie;
+package species;
 
 import main.Main;
-
-import static main.MemoryUtils.*;
+import main.MemoryUtils;
+import species.node.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiFunction;
-import java.util.stream.DoubleStream;
 
-public class Specie implements Comparable<Specie> {
-    private final BlockEntry[][] layer1;
+import static main.MemoryUtils.*;
+
+public class Network implements Comparable<Network> {
+    private final List<Node> nodes = new ArrayList<>();
+    private final List<Connection> connections = new ArrayList<>();
     private int fitness = 0;
 
     private static final List<Character> charset = new ArrayList<>();
@@ -42,55 +44,42 @@ public class Specie implements Comparable<Specie> {
         this.id = id.toString();
     }
 
-    Specie() {
-        layer1 = new BlockEntry[16][14];
-
-        for (int i = 0; i < layer1.length; i++) {
-            for (int j = 0; j < layer1[0].length; j++) {
-                layer1[i][j] = new BlockEntry();
+    Network() {
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 14; j++) {
+                int x = i;
+                int y = j;
+                nodes.add(new InputNode(() -> MemoryUtils.getBlocks()[x][y].getValue()));
             }
         }
+
+        for (int button : MemoryUtils.buttons) {
+            nodes.add(new OutputNode(button));
+        }
+
+        mutate();
     }
 
-    Specie(Specie parent) {
-        layer1 = new BlockEntry[16][14];
-
-        for (int i = 0; i < layer1.length; i++) {
-            for (int j = 0; j < layer1[0].length; j++) {
-                layer1[i][j] = new BlockEntry(parent.layer1[i][j]);
-            }
-        }
+    Network(Network parent1, Network parent2) {
+        // TODO
     }
 
-    Specie(Specie parent1, Specie parent2) {
-        layer1 = new BlockEntry[16][14];
-
-        for (int i = 0; i < layer1.length; i++) {
-            for (int j = 0; j < layer1[0].length; j++) {
-                layer1[i][j] = new BlockEntry(parent1.layer1[i][j], parent2.layer1[i][j]);
+    private <T> T calculate(NonInputNode<T> node) {
+        return node.apply(connections.stream().filter(Connection::isEnabled).filter(x -> x.output == node).mapToDouble(x -> {
+            Node input = x.input;
+            double inputValue;
+            if (input instanceof InputNode) {
+                inputValue = ((InputNode) input).get();
+            } else {
+                // input nodes will always be InputNode or HiddenNode, so this cast should always work
+                inputValue = calculate((HiddenNode) input);
             }
-        }
+            return inputValue * x.getWeight();
+        }).sum());
     }
 
-    private boolean[] calculate(Block[][] blocks) {
-        double[] layer2 = new double[6];
-
-        for (int i = 0; i < layer1.length; i++) {
-            for (int j = 0; j < layer1[0].length; j++) {
-                double[] out = layer1[i][j].get(blocks[i][j]);
-                for (int k = 0; k < 6; k ++) {
-                    layer2[k] += out[k];
-                }
-            }
-        }
-
-        Object[] out = DoubleStream.of(layer2).mapToObj(x -> x / (layer1.length * layer1[0].length) > Main.pressThreshold).toArray();
-        boolean[] result = new boolean[6];
-        for (int i = 0; i < 6; i++) {
-           result[i] = (boolean) out[i];
-        }
-
-        return result;
+    private void mutate() {
+        // TODO
     }
 
     private int previousFitnessNoTime = 0;
@@ -101,7 +90,10 @@ public class Specie implements Comparable<Specie> {
             return false;
         }
 
-        setJoypad(calculate(getBlocks()));
+        nodes.stream().filter(x -> x instanceof OutputNode).forEach(x -> {
+            OutputNode output = (OutputNode) x;
+            MemoryUtils.setButton(output.button, calculate(output));
+        });
         int fitnessNoTime = getX();
         fitness = fitnessNoTime + 4 * getTime();
 
@@ -129,7 +121,7 @@ public class Specie implements Comparable<Specie> {
     }
 
     @Override
-    public int compareTo(Specie other) {
+    public int compareTo(Network other) {
         if (this.fitness != other.fitness) {
             return this.fitness - other.fitness;
         }

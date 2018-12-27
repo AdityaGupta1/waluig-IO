@@ -1,4 +1,4 @@
-package specie;
+package species;
 
 import main.Main;
 import nintaco.api.API;
@@ -14,8 +14,8 @@ public class Generation {
 
     private int currentGeneration = 1;
     private final int size = Main.generationSize;
-    private Specie[] generation;
-    private int currentSpecie = -1;
+    private Network[] generation;
+    private int currentNetwork = -1;
     private final int numberToBreed = (int) (Main.percentToBreed * size);
 
     private int staleGenerations = 0;
@@ -24,9 +24,9 @@ public class Generation {
     private static final Random random = new Random();
 
     public Generation() {
-        generation = new Specie[size];
+        generation = new Network[size];
         for (int i = 0; i < size; i++) {
-            generation[i] = new Specie();
+            generation[i] = new Network();
         }
     }
 
@@ -50,35 +50,31 @@ public class Generation {
         lastMean = mean;
 
         currentGeneration++;
-        currentSpecie = -1;
+        currentNetwork = -1;
 
         for (int i = numberToBreed; i < size; i++) {
-            Supplier<Specie> randomSpecie = () -> generation[random.nextInt(numberToBreed)];
-            if (Main.singleParent) {
-                generation[i] = new Specie(randomSpecie.get());
-            } else {
-                generation[i] = new Specie(randomSpecie.get(), randomSpecie.get());
-            }
+            Supplier<Network> randomNetwork = () -> generation[random.nextInt(numberToBreed)];
+            generation[i] = new Network(randomNetwork.get(), randomNetwork.get());
         }
     }
 
-    private Specie getCurrent() {
-        return generation[currentSpecie];
+    private Network getCurrent() {
+        return generation[currentNetwork];
     }
 
-    public Specie nextSpecie() {
-        return nextSpecie(true);
+    public Network nextNetwork() {
+        return nextNetwork(true);
     }
 
-    private Specie nextSpecie(boolean load) {
+    private Network nextNetwork(boolean load) {
         if (load) {
             api.loadState("states/SMB.save");
         }
-        currentSpecie++;
+        currentNetwork++;
 
-        if (currentSpecie >= size) {
+        if (currentNetwork >= size) {
             advance();
-            return nextSpecie(false);
+            return nextNetwork(false);
         }
 
         getCurrent().resetFitness();
@@ -87,8 +83,8 @@ public class Generation {
 
     private int printStats() {
         Arrays.sort(generation, Collections.reverseOrder());
-        Specie[] top = Arrays.copyOfRange(generation, 0, numberToBreed);
-        int mean = (int) Math.round(Stream.of(top).mapToInt(Specie::getFitness).average().getAsDouble());
+        Network[] top = Arrays.copyOfRange(generation, 0, numberToBreed);
+        int mean = (int) Math.round(Stream.of(top).mapToInt(Network::getFitness).average().getAsDouble());
 
         System.out.println("generation " + currentGeneration);
         System.out.println("mean: " + mean);
@@ -103,7 +99,7 @@ public class Generation {
 
     public String[] getDisplay() {
         return new String[]{
-                "generation " + currentGeneration + ", specie " + (currentSpecie + 1) + "/" + size,
+                "generation " + currentGeneration + ", network " + (currentNetwork + 1) + "/" + size,
                 getCurrent().toString(),
                 "stale: " + staleGenerations + ", mutation rate: " + mutationRate
         };
