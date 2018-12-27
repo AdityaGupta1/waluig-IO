@@ -1,16 +1,10 @@
 package species;
 
 import main.MemoryUtils;
-import org.omg.PortableInterceptor.INACTIVE;
 import species.node.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 import static main.Constants.*;
@@ -172,6 +166,51 @@ public class Network implements Comparable<Network> {
         candidates.get(random.nextInt(candidates.size())).toggleEnabled();
     }
 
+    // counts both disjoint and excess connections
+    private int countDisjoint(Network other) {
+        List<Connection> all = new ArrayList<>();
+        all.addAll(this.connections);
+        all.addAll(other.connections);
+
+        Map<Integer, Boolean> disjoint = new HashMap<>();
+        for (Connection connection : all) {
+            disjoint.put(connection.getInnovation(), false);
+        }
+
+        Consumer<List<Connection>> updateDisjoint = list -> list.forEach(x -> {
+            int i = x.getInnovation();
+            disjoint.put(i, !disjoint.get(i));
+        });
+        updateDisjoint.accept(this.connections);
+        updateDisjoint.accept(other.connections);
+
+        return (int) disjoint.keySet().stream().filter(disjoint::get).count();
+    }
+
+    private double getAverageWeightDistance(Network other) {
+        double distance = 0;
+        int count = 0;
+
+        for (Connection connection : this.connections) {
+            for (Connection otherConnection : other.connections) {
+                if (connection.getInnovation() == otherConnection.getInnovation()) {
+                    distance += Math.abs(connection.getWeight() - otherConnection.getWeight());
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0) {
+            return 0;
+        } else {
+            return distance / count;
+        }
+    }
+
+    public boolean isCompatible(Network other) {
+        return deltaDisjoint * countDisjoint(other) + deltaWeights * getAverageWeightDistance(other) < compatibilityThreshold;
+    }
+
     private int previousFitnessNoTime = 0;
     private int stationaryFrames = 0;
 
@@ -200,14 +239,6 @@ public class Network implements Comparable<Network> {
         previousFitnessNoTime = fitnessNoTime;
 
         return true;
-    }
-
-    int getFitness() {
-        return fitness;
-    }
-
-    void resetFitness() {
-        fitness = 0;
     }
 
     @Override

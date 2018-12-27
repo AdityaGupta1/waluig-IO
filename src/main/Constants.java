@@ -16,4 +16,8 @@ public class Constants {
     public static final double mutateWeightStep = 0.1; // maximum value to change an individual weight by
     public static final double enableChance = 0.2; // chance to enable a random connection
     public static final double disableChance = 0.4; // chance to disable a random enabled connection
+
+    public static final double deltaDisjoint = 2.0;
+    public static final double deltaWeights = 0.4;
+    public static final double compatibilityThreshold = 3.0;
 }

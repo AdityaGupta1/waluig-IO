@@ -1,14 +1,9 @@
 package species;
 
-import main.Main;
-import nintaco.api.API;
-
-import static main.Constants.*;
+import static main.Constants.generationSize;
 
 public class Generation {
-    private static final API api = Main.api;
-
-    private int currentGeneration = 1;
+    private int currentGeneration = 0;
     private final Network[] generation = new Network[generationSize];
 
     public Generation() {
