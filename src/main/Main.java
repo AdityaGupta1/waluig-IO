@@ -17,8 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         generation = new Generation();
-        // TODO
-        currentNetwork = null;
+        currentNetwork = generation.nextNetwork();
 
         api.addFrameListener(() -> {
             api.setColor(Colors.WHITE);
@@ -36,9 +35,8 @@ public class Main {
                 return;
             }
 
-            if (!currentNetwork.runFrame()) {
-                // TODO
-                currentNetwork = null;
+            if (currentNetwork.runFrame()) {
+                currentNetwork = generation.nextNetwork();
                 resumeTime = System.currentTimeMillis() + waitTime;
             }
         });

@@ -1,6 +1,6 @@
 package species.node;
 
-import main.Constants;
+import static main.Constants.*;
 
 public class Connection {
     public final Node input;
@@ -44,7 +44,11 @@ public class Connection {
     }
 
     public void mutateWeight() {
-        weight += (Math.random() * 2 - 1) * Constants.mutateWeightStep;
+        weight += (Math.random() * 2 - 1) * mutateWeightStep;
+    }
+
+    public void randomWeight() {
+        weight = (Math.random() * 2 - 1) * randomWeightMax;
     }
 
     public int getInnovation() {
@@ -52,7 +56,8 @@ public class Connection {
     }
 
     public Connection copy() {
-        Connection clone = new Connection(input.copy(), output.copy(), weight, innovation);
+        // Connection clone = new Connection(input.copy(), output.copy(), weight, innovation);
+        Connection clone = new Connection(input, output, weight, innovation);
         clone.enabled = this.enabled;
         return clone;
     }

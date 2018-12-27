@@ -17,6 +17,7 @@ public class Network implements Comparable<Network> {
 
     private static final List<Character> charset = new ArrayList<>();
     private String id;
+    private int species; // only for printing
 
     private static final Random random = new Random();
 
@@ -35,16 +36,16 @@ public class Network implements Comparable<Network> {
         charset.addAll(chars.apply('a', 'z'));
     }
 
-    private void generateId() {
+    private String generateId() {
         StringBuilder id = new StringBuilder();
         for (int i = 0; i < 5; i++) {
             id.append(charset.get(random.nextInt(charset.size())));
         }
-        this.id = id.toString();
+        return id.toString();
     }
 
     Network() {
-        generateId();
+        this.id = generateId();
 
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 14; j++) {
@@ -61,7 +62,7 @@ public class Network implements Comparable<Network> {
         mutate();
     }
 
-    Network(Network copyFrom) {
+    Network(Network copyFrom, boolean copyId) {
         for (Node node : copyFrom.nodes) {
             nodes.add(node.copy());
         }
@@ -70,12 +71,50 @@ public class Network implements Comparable<Network> {
             connections.add(connection.copy());
         }
 
-        this.id = copyFrom.id;
+        this.id = copyId ? copyFrom.id : generateId();
     }
 
     Network(Network parent1, Network parent2) {
-        generateId();
-        // TODO
+        this.id = generateId();
+
+        parent1 = new Network(parent1, true);
+        parent2 = new Network(parent2, true);
+
+        // make sure parent1 always has the higher fitness
+        if (parent1.fitness < parent2.fitness) {
+            Network temp = parent1;
+            parent1 = parent2;
+            parent2 = temp;
+        }
+
+        Consumer<Connection> addToList = x -> {
+            connections.add(x);
+
+            if (!nodes.contains(x.input)) {
+                nodes.add(x.input);
+            }
+
+            if (!nodes.contains(x.output)) {
+                nodes.add(x.output);
+            }
+        };
+
+        outer:
+        for (Connection connection1 : parent1.connections) {
+            for (Connection connection2 : parent2.connections) {
+                if (connection1.getInnovation() == connection2.getInnovation()) {
+                    if (random.nextBoolean()) {
+                        addToList.accept(connection1);
+                    } else {
+                        addToList.accept(connection2);
+                    }
+
+                    continue outer;
+                }
+            }
+
+            addToList.accept(connection1);
+        }
     }
 
     private <T> T calculate(NonInputNode<T> node) {
@@ -92,7 +131,7 @@ public class Network implements Comparable<Network> {
         }).sum());
     }
 
-    private void mutate() {
+    void mutate() {
         BiConsumer<Double, Runnable> mutator = (chance, mutation) -> {
             if (Math.random() < chance) {
                 mutation.run();
@@ -153,6 +192,8 @@ public class Network implements Comparable<Network> {
         for (Connection connection : connections) {
             if (Math.random() < mutateWeightChance) {
                 connection.mutateWeight();
+            } else {
+                connection.randomWeight();
             }
         }
     }
@@ -207,7 +248,7 @@ public class Network implements Comparable<Network> {
         }
     }
 
-    public boolean isCompatible(Network other) {
+    boolean isCompatible(Network other) {
         return deltaDisjoint * countDisjoint(other) + deltaWeights * getAverageWeightDistance(other) < compatibilityThreshold;
     }
 
@@ -216,7 +257,7 @@ public class Network implements Comparable<Network> {
 
     public boolean runFrame() {
         if (isDead()) {
-            return false;
+            return true;
         }
 
         nodes.stream().filter(x -> x instanceof OutputNode).forEach(x -> {
@@ -238,7 +279,19 @@ public class Network implements Comparable<Network> {
 
         previousFitnessNoTime = fitnessNoTime;
 
-        return true;
+        return false;
+    }
+
+    int getFitness() {
+        return fitness;
+    }
+
+    void resetFitness() {
+        fitness = 0;
+    }
+
+    void setSpecies(int species) {
+        this.species = species;
     }
 
     @Override
@@ -250,8 +303,12 @@ public class Network implements Comparable<Network> {
         return random.nextBoolean() ? 1 : -1;
     }
 
+    public String shortString() {
+        return id + ", " + fitness;
+    }
+
     @Override
     public String toString() {
-        return id + ", " + fitness;
+        return shortString() + "; species " + species;
     }
 }
