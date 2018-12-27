@@ -7,6 +7,7 @@ public class InputNode extends Node {
 
     public InputNode(Supplier<Double> supplier) {
         this.supplier = supplier;
+        this.level = 0;
     }
 
     public double get() {

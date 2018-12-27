@@ -63,17 +63,13 @@ public class Network implements Comparable<Network> {
     }
 
     Network(Network copyFrom, boolean copyId) {
-        for (Node node : copyFrom.nodes) {
-            nodes.add(node.copy());
-        }
-
-        for (Connection connection : copyFrom.connections) {
-            connections.add(connection.copy());
-        }
-
+        nodes.addAll(copyFrom.nodes);
+        connections.addAll(copyFrom.connections);
         this.id = copyId ? copyFrom.id : generateId();
     }
 
+
+    // TODO make sure all nodes and connections copy over properly (all connections should refer to one set of nodes)
     Network(Network parent1, Network parent2) {
         this.id = generateId();
 
@@ -103,11 +99,11 @@ public class Network implements Comparable<Network> {
         for (Connection connection1 : parent1.connections) {
             for (Connection connection2 : parent2.connections) {
                 if (connection1.getInnovation() == connection2.getInnovation()) {
+                    Connection connection = connection1.copy();
                     if (random.nextBoolean()) {
-                        addToList.accept(connection1);
-                    } else {
-                        addToList.accept(connection2);
+                        connection.setWeight(connection2.getWeight());
                     }
+                    addToList.accept(connection);
 
                     continue outer;
                 }
@@ -149,7 +145,7 @@ public class Network implements Comparable<Network> {
         BiPredicate<Node, Node> hasConnection = (a, b) -> {
             for (Connection connection : connections) {
                 if ((connection.input == a && connection.output == b) ||
-                        (connection.output == a && connection.input == b)) {
+                        (connection.input == b && connection.output == a)) {
                     return true;
                 }
             }
@@ -157,7 +153,8 @@ public class Network implements Comparable<Network> {
             return false;
         };
 
-        BiPredicate<Node, Node> findNew = hasConnection.or((a, b) -> a instanceof OutputNode || b instanceof InputNode);
+        BiPredicate<Node, Node> findNew = hasConnection.or((a, b) -> a instanceof OutputNode || b instanceof InputNode)
+                /*.or((a, b) -> a.getLevel() > b.getLevel())*/;
 
         Node input;
         Node output;
@@ -182,7 +179,7 @@ public class Network implements Comparable<Network> {
         Node output = connection.output;
 
         connection.setEnabled(false);
-        Node node = new HiddenNode();
+        Node node = new HiddenNode((input.getLevel() + output.getLevel()) / 2);
         nodes.add(node);
         connections.add(new Connection(input, node, 1));
         connections.add(new Connection(node, output, connection.getWeight()));
