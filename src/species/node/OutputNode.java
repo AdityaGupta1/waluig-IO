@@ -1,5 +1,6 @@
 package species.node;
 
+import main.Constants;
 import main.Main;
 
 import java.util.function.Function;
@@ -14,7 +15,7 @@ public class OutputNode extends NonInputNode<Boolean> {
 
     // default just checks if the sigmoid of the input value is greater than 0.5
     public OutputNode(int button) {
-        this(x -> Node.sigmoid(x) > Main.pressThreshold, button);
+        this(x -> Node.sigmoid(x) > Constants.pressThreshold, button);
     }
 
     @Override

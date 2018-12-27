@@ -1,14 +1,19 @@
 package species;
 
-import main.Main;
 import main.MemoryUtils;
+import org.omg.PortableInterceptor.INACTIVE;
 import species.node.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import static main.Constants.*;
 import static main.MemoryUtils.*;
 
 public class Network implements Comparable<Network> {
@@ -17,7 +22,7 @@ public class Network implements Comparable<Network> {
     private int fitness = 0;
 
     private static final List<Character> charset = new ArrayList<>();
-    private final String id;
+    private String id;
 
     private static final Random random = new Random();
 
@@ -36,7 +41,7 @@ public class Network implements Comparable<Network> {
         charset.addAll(chars.apply('a', 'z'));
     }
 
-    {
+    private void generateId() {
         StringBuilder id = new StringBuilder();
         for (int i = 0; i < 5; i++) {
             id.append(charset.get(random.nextInt(charset.size())));
@@ -45,6 +50,8 @@ public class Network implements Comparable<Network> {
     }
 
     Network() {
+        generateId();
+
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 14; j++) {
                 int x = i;
@@ -60,7 +67,20 @@ public class Network implements Comparable<Network> {
         mutate();
     }
 
+    Network(Network copyFrom) {
+        for (Node node : copyFrom.nodes) {
+            nodes.add(node.copy());
+        }
+
+        for (Connection connection : copyFrom.connections) {
+            connections.add(connection.copy());
+        }
+
+        this.id = copyFrom.id;
+    }
+
     Network(Network parent1, Network parent2) {
+        generateId();
         // TODO
     }
 
@@ -79,7 +99,77 @@ public class Network implements Comparable<Network> {
     }
 
     private void mutate() {
-        // TODO
+        BiConsumer<Double, Runnable> mutator = (chance, mutation) -> {
+            if (Math.random() < chance) {
+                mutation.run();
+            }
+        };
+
+        mutator.accept(addConnectionChance, this::mutateAddConnection);
+        mutator.accept(addNodeChance, this::mutateAddNode);
+        mutator.accept(mutateWeightsChance, this::mutateWeights);
+        mutator.accept(enableChance, () -> this.mutateEnable(true));
+        mutator.accept(disableChance, () -> this.mutateEnable(false));
+    }
+
+    private void mutateAddConnection() {
+        BiPredicate<Node, Node> hasConnection = (a, b) -> {
+            for (Connection connection : connections) {
+                if ((connection.input == a && connection.output == b) ||
+                        (connection.output == a && connection.input == b)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        BiPredicate<Node, Node> findNew = hasConnection.or((a, b) -> a instanceof OutputNode || b instanceof InputNode);
+
+        Node input;
+        Node output;
+        Supplier<Node> randomNode = () -> nodes.get(random.nextInt(nodes.size()));
+
+        do {
+            input = randomNode.get();
+            output = randomNode.get();
+        } while(findNew.test(input, output));
+
+        connections.add(new Connection(input, output, Math.random() * 4 - 2));
+    }
+
+    private void mutateAddNode() {
+        List<Connection> candidates = connections.stream().filter(Connection::isEnabled).collect(Collectors.toList());
+        if (candidates.isEmpty()) {
+            return;
+        }
+
+        Connection connection = candidates.get(random.nextInt(candidates.size()));
+        Node input = connection.input;
+        Node output = connection.output;
+
+        connection.setEnabled(false);
+        Node node = new HiddenNode();
+        nodes.add(node);
+        connections.add(new Connection(input, node, 1));
+        connections.add(new Connection(node, output, connection.getWeight()));
+    }
+
+    private void mutateWeights() {
+        for (Connection connection : connections) {
+            if (Math.random() < mutateWeightChance) {
+                connection.mutateWeight();
+            }
+        }
+    }
+
+    private void mutateEnable(boolean enable) {
+        List<Connection> candidates = connections.stream().filter(x -> x.isEnabled() != enable).collect(Collectors.toList());
+        if (candidates.isEmpty()) {
+            return;
+        }
+
+        candidates.get(random.nextInt(candidates.size())).toggleEnabled();
     }
 
     private int previousFitnessNoTime = 0;
@@ -103,7 +193,7 @@ public class Network implements Comparable<Network> {
             stationaryFrames = 0;
         }
 
-        if (stationaryFrames > Main.framesBeforeReset) {
+        if (stationaryFrames > framesBeforeReset) {
             setDead();
         }
 
