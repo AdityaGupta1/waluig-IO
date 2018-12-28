@@ -11,8 +11,8 @@ import static main.Constants.*;
 import static main.MemoryUtils.*;
 
 public class Network implements Comparable<Network> {
-    private final List<Node> nodes = new ArrayList<>();
-    private final List<Connection> connections = new ArrayList<>();
+    public final List<Node> nodes = new ArrayList<>();
+    public final List<Connection> connections = new ArrayList<>();
     private int fitness = 0;
 
     private static final List<Character> charset = new ArrayList<>();
@@ -49,9 +49,7 @@ public class Network implements Comparable<Network> {
 
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 14; j++) {
-                int x = i;
-                int y = j;
-                nodes.add(new InputNode(() -> MemoryUtils.getBlocks()[x][y].getValue()));
+                nodes.add(new BlockNode(i, j));
             }
         }
 
@@ -154,7 +152,7 @@ public class Network implements Comparable<Network> {
         };
 
         BiPredicate<Node, Node> findNew = hasConnection.or((a, b) -> a instanceof OutputNode || b instanceof InputNode)
-                /*.or((a, b) -> a.getLevel() > b.getLevel())*/;
+                .or((a, b) -> a.getLevel() >= b.getLevel());
 
         Node input;
         Node output;

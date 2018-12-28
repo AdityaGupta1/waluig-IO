@@ -9,7 +9,7 @@ public class Connection {
     private double weight   ;
     private boolean enabled = true;
 
-    private static int globalInnovation = 0;
+    private static int globalInnovation = 1;
     private final int innovation;
 
     public Connection(Node input, Node output, double weight, int innovation) {
@@ -20,7 +20,7 @@ public class Connection {
     }
 
     public Connection(Node input, Node output, double weight) {
-        this(input, output, weight, ++globalInnovation);
+        this(input, output, weight, globalInnovation++);
     }
 
     public boolean isEnabled() {

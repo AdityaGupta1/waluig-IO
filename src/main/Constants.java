@@ -1,7 +1,7 @@
 package main;
 
 public class Constants {
-    public static final int speed = 800;
+    public static final int speed = 100;
 
     public static final int generationSize = 100;
     public static final int numberToDisplay = 10;
@@ -9,7 +9,8 @@ public class Constants {
     public static final double pressThreshold = 0;
 
     public static final long waitTime = 200;
-    public static final int framesBeforeReset = 60;
+    // public static final int framesBeforeReset = 60;
+    public static final int framesBeforeReset = 60000000;
 
     public static final double crossoverChance = 0.75; // chance that two networks will cross over (as opposed to one network simply mutating on its own)
     public static final double speciesTopPercent = 0.1; // percent of an individual species to breed (rounds up)

@@ -37,7 +37,7 @@ public class MemoryUtils {
             for (int j = 0; j < 14; j++) {
                 int tempX = getX() + i * 16;
                 int x = (tempX % 256) / 16;
-                int y = j * 16;
+                int y = (j - 1) * 16;
 
                 int address = 0x0500 + (((tempX / 256) % 2 == 1) ? 208 : 0) + x + y;
                 Block block = Block.NONE;
@@ -54,13 +54,21 @@ public class MemoryUtils {
                 continue;
             }
 
-            int x = read(0x0087 + i) + 256 * read(0x006E + i) - getX();
+            int x = read(0x0087 + i) + 256 * read(0x006E + i) - getX() + 16;
             if (x < 0  || x > 256) {
                 continue;
             }
 
             x = (x % 256) / 16;
             int y = (read(0x00CF + i) - 8) / 16;
+
+            if (y >= 14) {
+                continue;
+            }
+
+            if (blocks[x][y] == Block.BLOCK) {
+                continue;
+            }
 
             blocks[x][y] = Block.ENEMY;
         }
@@ -81,7 +89,15 @@ public class MemoryUtils {
     }
 
     public static void setButton(int button, boolean buttonValue) {
+        if (true) {
+            return;
+        }
+
         api.writeGamepad(0, button, buttonValue);
+    }
+
+    public static boolean getButton(int button) {
+        return api.readGamepad(0, button);
     }
 
     public static int getTime() {
