@@ -57,7 +57,9 @@ public class Network implements Comparable<Network> {
             nodes.add(new OutputNode(button));
         }
 
-        mutate();
+        do {
+            mutate();
+        } while(connections.isEmpty());
     }
 
     Network(Network copyFrom, boolean copyId) {
