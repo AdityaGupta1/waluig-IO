@@ -1,7 +1,6 @@
 package main;
 
 import nintaco.api.API;
-import nintaco.api.GamepadButtons;
 
 import static nintaco.api.GamepadButtons.*;
 

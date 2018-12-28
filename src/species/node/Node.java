@@ -1,6 +1,5 @@
 package species.node;
 
-// symbolic class
 public abstract class Node {
     double level;
 

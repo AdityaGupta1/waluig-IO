@@ -3,7 +3,7 @@ package species;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Species {
+class Species {
     private Network representative;
     private List<Network> networks = new ArrayList<>();
     private final int id;
@@ -13,12 +13,12 @@ public class Species {
         id = ++nextId;
     }
 
-    public Species(Network representative) {
+    Species(Network representative) {
         this.representative = representative;
         add(representative);
     }
 
-    public boolean add(Network network) {
+    boolean add(Network network) {
         if (representative.isCompatible(network)) {
             networks.add(network);
             network.setSpecies(id);
@@ -28,19 +28,19 @@ public class Species {
         }
     }
 
-    public List<Network> getNetworks() {
+    List<Network> getNetworks() {
         return new ArrayList<>(networks);
     }
 
-    public int getSize() {
+    int getSize() {
         return networks.size();
     }
 
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return networks.isEmpty();
     }
 
-    public void clear() {
+    void clear() {
         networks.clear();
     }
 }

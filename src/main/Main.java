@@ -1,7 +1,5 @@
 package main;
 
-import static main.Constants.*;
-import static main.MemoryUtils.Block;
 import nintaco.api.API;
 import nintaco.api.ApiSource;
 import nintaco.api.Colors;
@@ -9,15 +7,15 @@ import species.Generation;
 import species.Network;
 import species.node.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static main.Constants.speed;
+import static main.Constants.waitTime;
+import static main.MemoryUtils.Block;
 
 public class Main {
     public static final API api = ApiSource.getAPI();
