@@ -10,9 +10,11 @@ import species.node.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static main.Constants.displayDisabledConnections;
 import static main.Constants.speed;
 import static main.Constants.waitTime;
 import static main.MemoryUtils.Block;
@@ -56,9 +58,8 @@ public class Main {
 
         Map<Node, Box> boxes = boxes();
         boxes.values().forEach(Box::draw);
-        for (Connection connection : currentNetwork.connections) {
-            boxes.get(connection.input).drawLineTo(boxes.get(connection.output), connection.isEnabled() ? connection.getWeight() : Double.NaN);
-        }
+        currentNetwork.connections.stream().filter(x -> !x.isEnabled()).forEach(x -> boxes.get(x.input).drawLineTo(boxes.get(x.output), Double.NaN));
+        currentNetwork.connections.stream().filter(x -> x.isEnabled()).forEach(x -> boxes.get(x.input).drawLineTo(boxes.get(x.output), x.getWeight()));
     }
 
     private static final int side = 4;
@@ -80,7 +81,6 @@ public class Main {
             outer:
             for (int j = 0; j < 14; j++) {
                 Block block = blocks[i][j];
-                // InputNode node = currentNetwork.inputNodes[i][j];
                 final Box box;
 
                 if (block == Block.NONE) {
@@ -192,6 +192,10 @@ public class Main {
             int color;
 
             if (Double.isNaN(weight)) {
+                if (!displayDisabledConnections) {
+                    return;
+                }
+
                 color = Colors.LIGHT_GRAY;
             } else if (weight > 1) {
                 color = Colors.GREEN;

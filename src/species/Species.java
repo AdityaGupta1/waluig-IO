@@ -36,8 +36,8 @@ class Species {
         return networks.size();
     }
 
-    boolean isEmpty() {
-        return networks.isEmpty();
+    boolean notEmpty() {
+        return !networks.isEmpty();
     }
 
     void clear() {
