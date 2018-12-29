@@ -65,9 +65,10 @@ public class Network implements Comparable<Network> {
 
     Network(Network copyFrom, boolean copyId) {
         nodes.addAll(copyFrom.nodes);
-        connections.addAll(copyFrom.connections);
+        connections.addAll(copyFrom.connections.stream().map(Connection::copy).collect(Collectors.toList()));
         this.id = copyId ? copyFrom.id : generateId();
     }
+
     Network(Network parent1, Network parent2) {
         this.id = generateId();
 
@@ -111,13 +112,15 @@ public class Network implements Comparable<Network> {
 
             addToList.accept(connection1);
         }
+
+        mutate();
     }
 
     void mutate() {
         mutate(false);
     }
 
-    void mutate(boolean onlyStructural) {
+    private void mutate(boolean onlyStructural) {
         // for example, chance = 1.4 means one guaranteed mutation and a 0.4 chance of a second mutation
         BiConsumer<Double, Runnable> mutator = (chance, mutation) -> {
             do {
@@ -352,7 +355,7 @@ public class Network implements Comparable<Network> {
 
     @Override
     public int compareTo(Network other) {
-        return this.fitness - other.fitness;
+        return Integer.compare(this.fitness, other.fitness);
     }
 
     @Override

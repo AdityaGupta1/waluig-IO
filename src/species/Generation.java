@@ -55,7 +55,6 @@ public class Generation {
 
         crossOver();
         sortIntoSpecies();
-        Arrays.stream(generation).forEach(Network::mutate);
     }
 
     private void printStats() {
@@ -83,12 +82,19 @@ public class Generation {
                 continue;
             }
 
-            List<Network> top = species.getNetworks().stream().sorted().limit((int) Math.ceil(speciesTopPercent * species.getSize())).collect(Collectors.toList());
+            List<Network> top = species.getNetworks().stream().sorted(Comparator.reverseOrder())
+                    .limit((int) Math.ceil(speciesTopPercent * species.getSize())).collect(Collectors.toList());
             Supplier<Network> randomNetwork = () -> top.get(random.nextInt(top.size()));
 
-            for (int j = 0; j < offspring; j++) {
+            for (Network network : top) {
+                newNetworks.add(new Network(network, true));
+            }
+
+            for (int j = top.size(); j < offspring; j++) {
                 if (top.size() == 1 || Math.random() < 1 - crossoverChance) {
-                    newNetworks.add(new Network(top.get(0), false));
+                    Network newNetwork = new Network(randomNetwork.get(), false);
+                    newNetwork.mutate();
+                    newNetworks.add(newNetwork);
                 } else {
                     Network parent1;
                     Network parent2;

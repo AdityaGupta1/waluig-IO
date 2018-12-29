@@ -6,7 +6,7 @@ public class Constants {
     public static final boolean displayDisabledConnections = true;
 
     public static final int generationSize = 100;
-    public static final int generationTopNumber = 10; // how many top networks to calculate stats for
+    public static final int generationTopNumber = 10; // how many top networks per generation to calculate stats for
 
     public static final double pressThreshold = 0;
 
