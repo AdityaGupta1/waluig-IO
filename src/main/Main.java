@@ -56,7 +56,9 @@ public class Main {
 
         Map<Node, Box> boxes = boxes();
         boxes.values().forEach(Box::draw);
-        currentNetwork.connections.forEach(x -> boxes.get(x.input).drawLine(boxes.get(x.output), x.getWeight()));
+        for (Connection connection : currentNetwork.connections) {
+            boxes.get(connection.input).drawLineTo(boxes.get(connection.output), connection.isEnabled() ? connection.getWeight() : Double.NaN);
+        }
     }
 
     private static final int side = 4;
@@ -111,44 +113,46 @@ public class Main {
             output.put(node, new Box((leftBound + rightBound) / 2.0, 80, Colors.WHITE));
         }
 
-        for (Connection connection : currentNetwork.connections) {
-            if (!connection.isEnabled()) {
-                continue;
-            }
-
-            Box a = output.get(connection.input);
-            Box b = output.get(connection.output);
-
-            Consumer<Box> bounds = (z) -> {
-                if (z.x < leftBound) {
-                    z.x = leftBound;
+        for (int i = 0; i < 4; i++) {
+            for (Connection connection : currentNetwork.connections) {
+                if (!connection.isEnabled()) {
+                    continue;
                 }
 
-                if (z.x > rightBound) {
-                    z.x = rightBound;
+                Box a = output.get(connection.input);
+                Box b = output.get(connection.output);
+
+                Consumer<Box> bounds = (z) -> {
+                    if (z.x < leftBound) {
+                        z.x = leftBound;
+                    }
+
+                    if (z.x > rightBound) {
+                        z.x = rightBound;
+                    }
+                };
+
+                if (connection.input instanceof HiddenNode) {
+                    a.x = 0.75 * a.x + 0.25 * b.x;
+                    if (a.x >= b.x) {
+                        a.x -= 40;
+                    }
+
+                    bounds.accept(a);
+
+                    a.y = 0.75 * a.y + 0.25 * b.y;
                 }
-            };
 
-            if (connection.input instanceof HiddenNode) {
-                a.x = 0.75 * a.x + 0.25 * b.x;
-                if (a.x >= b.x) {
-                    a.x -= 40;
+                if (connection.output instanceof HiddenNode) {
+                    b.x = 0.75 * b.x + 0.25 * a.x;
+                    if (a.x >= b.x) {
+                        b.x += 40;
+                    }
+
+                    bounds.accept(b);
+
+                    b.y = 0.75 * b.y + 0.25 * a.y;
                 }
-
-                bounds.accept(a);
-
-                a.y = 0.75 * a.y + 0.25 * b.y;
-            }
-
-            if (connection.output instanceof HiddenNode) {
-                b.x = 0.75 * b.x + 0.25 * a.x;
-                if (a.x >= b.x) {
-                    b.x += 40;
-                }
-
-                bounds.accept(b);
-
-                b.y = 0.75 * b.y + 0.25 * a.y;
             }
         }
 
@@ -183,10 +187,13 @@ public class Main {
             api.fillRect(round(x), round(y), side, side);
         }
 
-        void drawLine(Box other, double weight) {
+        // pass NaN as the weight if the connection is disabled
+        void drawLineTo(Box to, double weight) {
             int color;
 
-            if (weight > 1) {
+            if (Double.isNaN(weight)) {
+                color = Colors.LIGHT_GRAY;
+            } else if (weight > 1) {
                 color = Colors.GREEN;
             } else if (weight < -1) {
                 color = Colors.RED;
@@ -195,12 +202,12 @@ public class Main {
             } else if (weight < 0) {
                 color = Colors.LIGHT_RED;
             } else { // weight == 0
-                color = Colors.LIGHT_GRAY;
+                color = Colors.WHITE;
             }
 
             api.setColor(color);
 
-            api.drawLine(round(x + side / 2.0), round(y + side / 2.0), round(other.x + side / 2.0), round(other.y + side / 2.0));
+            api.drawLine(round(x + side / 2.0), round(y + side / 2.0), round(to.x + side / 2.0), round(to.y + side / 2.0));
         }
     }
 }

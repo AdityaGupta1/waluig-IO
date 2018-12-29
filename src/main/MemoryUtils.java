@@ -88,10 +88,6 @@ public class MemoryUtils {
     }
 
     public static void setButton(int button, boolean buttonValue) {
-        if (true) {
-            return;
-        }
-
         api.writeGamepad(0, button, buttonValue);
     }
 

@@ -68,7 +68,6 @@ public class Network implements Comparable<Network> {
         this.id = copyId ? copyFrom.id : generateId();
     }
 
-
     // TODO make sure all nodes and connections copy over properly (all connections should refer to one set of nodes)
     Network(Network parent1, Network parent2) {
         this.id = generateId();
@@ -113,24 +112,15 @@ public class Network implements Comparable<Network> {
         }
     }
 
-    private <T> T calculate(NonInputNode<T> node) {
-        return node.apply(connections.stream().filter(Connection::isEnabled).filter(x -> x.output == node).mapToDouble(x -> {
-            Node input = x.input;
-            double inputValue;
-            if (input instanceof InputNode) {
-                inputValue = ((InputNode) input).get();
-            } else {
-                // input nodes will always be InputNode or HiddenNode, so this cast should always work
-                inputValue = calculate((HiddenNode) input);
-            }
-            return inputValue * x.getWeight();
-        }).sum());
-    }
-
     void mutate() {
+        // for example, chance = 1.4 means one guaranteed mutation and a 0.4 chance of a second mutation
         BiConsumer<Double, Runnable> mutator = (chance, mutation) -> {
-            if (Math.random() < chance) {
-                mutation.run();
+            while (chance > 0) {
+                if (Math.random() < chance) {
+                    mutation.run();
+                }
+
+                chance--;
             }
         };
 
@@ -249,6 +239,20 @@ public class Network implements Comparable<Network> {
         return deltaDisjoint * countDisjoint(other) + deltaWeights * getAverageWeightDistance(other) < compatibilityThreshold;
     }
 
+    private <T> T calculate(NonInputNode<T> node) {
+        return node.apply(connections.stream().filter(Connection::isEnabled).filter(x -> x.output == node).mapToDouble(x -> {
+            Node input = x.input;
+            double inputValue;
+            if (input instanceof InputNode) {
+                inputValue = ((InputNode) input).get();
+            } else {
+                // input nodes will always be InputNode or HiddenNode, so this cast should always work
+                inputValue = calculate((HiddenNode) input);
+            }
+            return inputValue * x.getWeight();
+        }).sum());
+    }
+
     private int previousFitnessNoTime = 0;
     private int stationaryFrames = 0;
 
@@ -296,12 +300,8 @@ public class Network implements Comparable<Network> {
         return this.fitness - other.fitness;
     }
 
-    public String shortString() {
-        return id + ", " + fitness;
-    }
-
     @Override
     public String toString() {
-        return shortString() + "; species " + species;
+        return id + ", " + fitness + "; species " + species;
     }
 }
