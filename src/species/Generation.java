@@ -1,11 +1,10 @@
 package species;
 
-import java.security.cert.CollectionCertStoreParameters;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static main.Constants.*;
@@ -146,8 +145,10 @@ public class Generation {
     private Map<Species, Integer> offspringPerSpecies() {
         double totalAdjustedFitness = this.species.stream().mapToDouble(Species::getAdjustedFitness).sum();
 
-        // empty check here just in case
-        List<Species> nonEmptySpecies = this.species.stream().filter(Species::notEmpty).collect(Collectors.toList());
+        // list of all non-empty species, sorted in descending order by top network's fitness
+        List<Species> nonEmptySpecies = this.species.stream().filter(Species::notEmpty)
+                .sorted(Comparator.comparingInt(x -> x.getNetworks().stream().sorted(Comparator.reverseOrder())
+                        .limit(1).findFirst().get().getFitness())).collect(Collectors.toList());
         int[] offspringPerNonEmptySpecies = round(nonEmptySpecies.stream().mapToDouble(x -> generationSize * x.getAdjustedFitness() / totalAdjustedFitness).toArray());
 
         Map<Species, Integer> output = new HashMap<>();
@@ -164,19 +165,18 @@ public class Generation {
         return output;
     }
 
+    // input should be sorted in the order in which to add 1
+    // for example, passing in [2.2, 1.2, 0.3, 0.3] with a total of 4 returns [3, 1, 0, 0]
     private int[] round(double[] input) {
         if (input.length == 1) {
             return Arrays.stream(input).mapToInt(x -> (int) Math.round(x)).toArray();
         }
 
-        List<Integer> sortedIndices = IntStream.range(0, input.length).boxed()
-                .sorted(Comparator.comparingDouble(i -> input[i] - Math.floor(input[i]))).collect(Collectors.toList());
-
         int[] output = new int[input.length];
         int left = generationSize - DoubleStream.of(input).mapToInt(x -> (int) Math.floor(x)).sum();
         for (int i = 0; i < output.length; i++) {
             output[i] = (int) Math.floor(input[i]);
-            if (sortedIndices.indexOf(i) < left) {
+            if (i < left) {
                 output[i]++;
             }
         }
