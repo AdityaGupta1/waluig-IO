@@ -71,8 +71,7 @@ public class Generation {
             System.out.println("=========================");
             System.out.println("PURGING (" + purges + " so far)");
             System.out.println("=========================");
-            String remaining = "remaining species: " + species.stream().map(x -> Integer.toString(x.getId())).collect(Collectors.joining(", "));
-            System.out.println(remaining.substring(0, remaining.length() - 2));
+            System.out.println("remaining species: " + species.stream().map(x -> Integer.toString(x.getId())).collect(Collectors.joining(", ")));
             System.out.println();
         }
 

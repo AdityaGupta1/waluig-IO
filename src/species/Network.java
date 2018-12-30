@@ -201,6 +201,7 @@ public class Network implements Comparable<Network> {
         }
     }
 
+    // mutates to either enable or disable a random connection of the opposite state, depending on the value passed in for the parameter
     private void mutateEnable(boolean enable) {
         List<Connection> candidates = connections.stream().filter(x -> x.isEnabled() != enable).collect(Collectors.toList());
         if (candidates.isEmpty()) {

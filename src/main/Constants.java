@@ -13,7 +13,7 @@ public class Constants {
     public static final long waitTime = 200;
     public static final int framesBeforeReset = 60;
 
-    public static final int staleGenerationsBeforePurge = 10; // number of stale generations before only the top two species are allowed to reproduce
+    public static final int staleGenerationsBeforePurge = 5; // number of stale generations before only the top two species are allowed to reproduce
     public static final int staleThreshold = 10; // generations have to improve the mean by at least this much to not be stale
 
     public static final double crossoverChance = 0.75; // chance that two networks will cross over (as opposed to one network simply mutating on its own)
