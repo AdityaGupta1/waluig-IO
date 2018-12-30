@@ -286,7 +286,7 @@ public class Network implements Comparable<Network> {
         }
     }
 
-    double getCompatibility(Network other) {
+    private double getCompatibility(Network other) {
         int[] nonMatching = countNonMatching(other);
         return deltaDisjoint * nonMatching[0]
                 + deltaExcess * nonMatching[1]
@@ -360,6 +360,6 @@ public class Network implements Comparable<Network> {
 
     @Override
     public String toString() {
-        return id + ", " + fitness + "; species " + species;
+        return id + ", " + String.format("%4s", fitness) + "; species " + species;
     }
 }

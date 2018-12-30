@@ -1,8 +1,8 @@
 package species;
 
+import java.security.cert.CollectionCertStoreParameters;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -47,8 +47,35 @@ public class Generation {
         return generation[currentNetwork];
     }
 
+    private int previousBestMean = 0;
+    private int staleGenerations = 0;
+    private int purges = 0;
+
     private void advance() {
-        printStats();
+        int mean = printStats();
+
+        if (mean - previousBestMean <= staleThreshold) {
+            staleGenerations++;
+        } else {
+            staleGenerations = 0;
+        }
+
+        if (mean > previousBestMean) {
+            previousBestMean = mean;
+        }
+
+        if (staleGenerations == staleGenerationsBeforePurge) {
+            species = species.stream().sorted(Comparator.reverseOrder()).limit(2).collect(Collectors.toList());
+            staleGenerations = 0;
+            purges++;
+
+            System.out.println("=========================");
+            System.out.println("PURGING (" + purges + " so far)");
+            System.out.println("=========================");
+            String remaining = "remaining species: " + species.stream().map(x -> Integer.toString(x.getId())).collect(Collectors.joining(", "));
+            System.out.println(remaining.substring(0, remaining.length() - 2));
+            System.out.println();
+        }
 
         currentGeneration++;
         currentNetwork = -1;
@@ -57,7 +84,7 @@ public class Generation {
         sortIntoSpecies();
     }
 
-    private void printStats() {
+    private int printStats() {
         Arrays.sort(generation, Collections.reverseOrder());
         Network[] top = Arrays.copyOfRange(generation, 0, generationTopNumber);
         int mean = (int) Math.round(Stream.of(top).mapToInt(Network::getFitness).average().getAsDouble());
@@ -66,9 +93,11 @@ public class Generation {
         System.out.println("mean: " + mean);
         System.out.println("---------------");
         for (int i = 0; i < generationTopNumber; i++) {
-            System.out.println("" + (i + 1) + ") " + top[i]);
+            System.out.println(String.format("%-4s", "" + (i + 1) + ") ") + top[i]);
         }
         System.out.println();
+
+        return mean;
     }
 
     private void crossOver() {
@@ -115,11 +144,11 @@ public class Generation {
     }
 
     private Map<Species, Integer> offspringPerSpecies() {
-        ToDoubleFunction<Species> speciesAdjustedFitness = x -> ((double) x.getNetworks().stream().mapToInt(Network::getFitness).sum()) / x.getSize();
-        double totalAdjustedFitness = this.species.stream().mapToDouble(speciesAdjustedFitness).sum();
+        double totalAdjustedFitness = this.species.stream().mapToDouble(Species::getAdjustedFitness).sum();
 
+        // empty check here just in case
         List<Species> nonEmptySpecies = this.species.stream().filter(Species::notEmpty).collect(Collectors.toList());
-        int[] offspringPerNonEmptySpecies = round(nonEmptySpecies.stream().mapToDouble(x -> generationSize * speciesAdjustedFitness.applyAsDouble(x) / totalAdjustedFitness).toArray());
+        int[] offspringPerNonEmptySpecies = round(nonEmptySpecies.stream().mapToDouble(x -> generationSize * x.getAdjustedFitness() / totalAdjustedFitness).toArray());
 
         Map<Species, Integer> output = new HashMap<>();
         for (int i = 0; i < this.species.size(); i++) {
@@ -144,7 +173,7 @@ public class Generation {
                 .sorted(Comparator.comparingDouble(i -> input[i] - Math.floor(input[i]))).collect(Collectors.toList());
 
         int[] output = new int[input.length];
-        int left = 100 - DoubleStream.of(input).mapToInt(x -> (int) Math.floor(x)).sum();
+        int left = generationSize - DoubleStream.of(input).mapToInt(x -> (int) Math.floor(x)).sum();
         for (int i = 0; i < output.length; i++) {
             output[i] = (int) Math.floor(input[i]);
             if (sortedIndices.indexOf(i) < left) {
@@ -156,7 +185,7 @@ public class Generation {
     }
 
     private void sortIntoSpecies() {
-        this.species.forEach(Species::clear);
+        this.species.forEach(Species::reset);
 
         outer:
         for (Network network : generation) {
@@ -176,7 +205,8 @@ public class Generation {
     public String[] getDisplay() {
         return new String[]{
                 "generation " + currentGeneration + ", network " + (currentNetwork + 1) + "/" + generationSize,
-                generation[currentNetwork].toString()
+                generation[currentNetwork].toString(),
+                "stale: " + staleGenerations + ", purges: " + purges
         };
     }
 }

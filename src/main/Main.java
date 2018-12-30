@@ -39,7 +39,7 @@ public class Main {
         api.setColor(Colors.WHITE);
         String[] display = generation.getDisplay();
         for (int i = 0; i < display.length; i++) {
-            api.drawString(generation.getDisplay()[i], 10, 35 + (10 * i), false);
+            api.drawString(generation.getDisplay()[i], 10, 35 + (10 * i), true);
         }
         api.setSpeed(speed);
 
@@ -75,7 +75,7 @@ public class Main {
 
         Block[][] blocks = MemoryUtils.getBlocks();
         final int x = 10;
-        final int y = 60;
+        final int y = 65;
 
         for (int i = 0; i < 16; i++) {
             outer:
