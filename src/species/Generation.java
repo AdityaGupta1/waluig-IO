@@ -2,7 +2,6 @@ package species;
 
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -42,7 +41,7 @@ public class Generation {
             return nextNetwork(false);
         }
 
-        generation[currentNetwork].resetFitness();
+        generation[currentNetwork].reset();
         return generation[currentNetwork];
     }
 

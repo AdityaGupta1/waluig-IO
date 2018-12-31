@@ -315,6 +315,9 @@ public class Network implements Comparable<Network> {
     private int previousFitnessNoTime = 0;
     private int stationaryFrames = 0;
 
+    private int previousTotalFitness = 0;
+    private boolean wasSliding = false;
+
     public boolean runFrame() {
         if (isDead()) {
             return true;
@@ -324,13 +327,25 @@ public class Network implements Comparable<Network> {
             OutputNode output = (OutputNode) x;
             MemoryUtils.setButton(output.button, calculate(output));
         });
-        int fitnessNoTime = getX();
-        fitness = fitnessNoTime + 4 * getTime();
+
+        boolean isSliding = MemoryUtils.isSlidingDownFlagpole();
+
+        if (isSliding && !wasSliding) { // level end check (doesn't include warp zone pipes or defeating Bowser)
+            previousTotalFitness = fitness + fitnessOnLevelComplete;
+            stationaryFrames = -60 * 30; // 30 seconds to advance to next level
+        }
+
+        wasSliding = isSliding;
+
+        int fitnessNoTime = getX() + previousTotalFitness;
+        fitness = fitnessNoTime + fitnessTimeMultiplier * getTime();
 
         if (fitnessNoTime == previousFitnessNoTime) {
             stationaryFrames++;
         } else {
-            stationaryFrames = 0;
+            if (stationaryFrames > 0) { // this check is necessary to not reset the 30 second grace period after completing a level
+                stationaryFrames = 0;
+            }
         }
 
         if (stationaryFrames > framesBeforeReset) {
@@ -346,8 +361,11 @@ public class Network implements Comparable<Network> {
         return fitness;
     }
 
-    void resetFitness() {
+    void reset() {
         fitness = 0;
+        previousFitnessNoTime = 0;
+        stationaryFrames = 0;
+        previousTotalFitness = 0;
     }
 
     void setSpecies(int species) {
@@ -361,6 +379,6 @@ public class Network implements Comparable<Network> {
 
     @Override
     public String toString() {
-        return id + ", " + String.format("%4s", fitness) + "; species " + species;
+        return id + ", " + String.format("%5s", fitness).replace(" ", "0") + "; species " + species;
     }
 }

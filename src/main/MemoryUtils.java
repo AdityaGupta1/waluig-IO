@@ -95,6 +95,10 @@ public class MemoryUtils {
         return api.readGamepad(0, button);
     }
 
+    public static boolean isSlidingDownFlagpole() {
+        return read(0x001D) == 0x03;
+    }
+
     public static int getTime() {
         return 100 * read(0x07F8) + 10 * read(0x07F9) + 1 * read(0x07FA);
     }
