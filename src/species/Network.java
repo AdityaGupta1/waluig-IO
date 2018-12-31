@@ -348,6 +348,10 @@ public class Network implements Comparable<Network> {
             }
         }
 
+        if (MemoryUtils.getTime() == 400) {
+            stationaryFrames = 0;
+        }
+
         if (stationaryFrames > framesBeforeReset) {
             setDead();
         }
