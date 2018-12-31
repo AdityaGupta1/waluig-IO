@@ -150,12 +150,13 @@ public class Generation {
         int[] offspringPerNonEmptySpecies = round(nonEmptySpecies.stream().mapToDouble(x -> generationSize * x.getAdjustedFitness() / totalAdjustedFitness).toArray());
 
         Map<Species, Integer> output = new HashMap<>();
-        for (int i = 0; i < this.species.size(); i++) {
-            Species species = this.species.get(i);
 
-            if (nonEmptySpecies.contains(species)) {
-                output.put(species, offspringPerNonEmptySpecies[i]);
-            } else {
+        for (int i = 0; i < nonEmptySpecies.size(); i++) {
+            output.put(nonEmptySpecies.get(i), offspringPerNonEmptySpecies[i]);
+        }
+        
+        for (Species species : this.species) {
+            if (!nonEmptySpecies.contains(species)) {
                 output.put(species, 0);
             }
         }

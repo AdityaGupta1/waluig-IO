@@ -332,7 +332,7 @@ public class Network implements Comparable<Network> {
 
         if (isSliding && !wasSliding) { // level end check (doesn't include warp zone pipes or defeating Bowser)
             previousTotalFitness = fitness + fitnessOnLevelComplete;
-            stationaryFrames = -60 * 30; // 30 seconds to advance to next level
+            stationaryFrames = -60 * 60;
         }
 
         wasSliding = isSliding;
@@ -343,7 +343,7 @@ public class Network implements Comparable<Network> {
         if (fitnessNoTime == previousFitnessNoTime) {
             stationaryFrames++;
         } else {
-            if (stationaryFrames > 0) { // this check is necessary to not reset the 30 second grace period after completing a level
+            if (stationaryFrames > 0) { // this check is necessary to not reset right after completing a level
                 stationaryFrames = 0;
             }
         }
