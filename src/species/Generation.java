@@ -63,7 +63,7 @@ public class Generation {
         }
 
         if (staleGenerations == staleGenerationsBeforePurge) {
-            species = species.stream().sorted(Comparator.reverseOrder()).limit(2).collect(Collectors.toList());
+            species = sortDescendingByTopNetwork().stream().limit(2).collect(Collectors.toList());
             staleGenerations = 0;
             purges++;
 
@@ -140,13 +140,17 @@ public class Generation {
         }
     }
 
+    // list of all non-empty species, sorted in descending order by top network's fitness
+    private List<Species> sortDescendingByTopNetwork() {
+        return this.species.stream().filter(Species::notEmpty)
+                .sorted(Comparator.comparingInt((Species x) -> x.getNetworks().stream().sorted(Comparator.reverseOrder())
+                        .limit(1).findFirst().get().getFitness()).reversed()).collect(Collectors.toList());
+    }
+
     private Map<Species, Integer> offspringPerSpecies() {
         double totalAdjustedFitness = this.species.stream().mapToDouble(Species::getAdjustedFitness).sum();
 
-        // list of all non-empty species, sorted in descending order by top network's fitness
-        List<Species> nonEmptySpecies = this.species.stream().filter(Species::notEmpty)
-                .sorted(Comparator.comparingInt(x -> x.getNetworks().stream().sorted(Comparator.reverseOrder())
-                        .limit(1).findFirst().get().getFitness())).collect(Collectors.toList());
+        List<Species> nonEmptySpecies = sortDescendingByTopNetwork();
         int[] offspringPerNonEmptySpecies = round(nonEmptySpecies.stream().mapToDouble(x -> generationSize * x.getAdjustedFitness() / totalAdjustedFitness).toArray());
 
         Map<Species, Integer> output = new HashMap<>();
@@ -154,7 +158,7 @@ public class Generation {
         for (int i = 0; i < nonEmptySpecies.size(); i++) {
             output.put(nonEmptySpecies.get(i), offspringPerNonEmptySpecies[i]);
         }
-        
+
         for (Species species : this.species) {
             if (!nonEmptySpecies.contains(species)) {
                 output.put(species, 0);
@@ -202,6 +206,10 @@ public class Generation {
     }
 
     public String[] getDisplay() {
+        if (currentNetwork == -1) {
+            return new String[]{""};
+        }
+
         return new String[]{
                 "generation " + currentGeneration + ", network " + (currentNetwork + 1) + "/" + generationSize,
                 generation[currentNetwork].toString(),

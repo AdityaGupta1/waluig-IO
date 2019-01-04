@@ -8,7 +8,7 @@ public class Constants {
     public static final int generationSize = 200;
     public static final int generationTopNumber = 12; // how many top networks per generation to calculate stats for
 
-    public static final double pressThreshold = 0;
+    public static final double pressThreshold = 0.0;
 
     public static final long waitTime = 200;
     public static final int framesBeforeReset = 60;
